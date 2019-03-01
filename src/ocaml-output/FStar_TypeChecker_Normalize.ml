@@ -9027,6 +9027,8 @@ let rec (elim_uvars :
                                (uu___375_30108.FStar_Syntax_Syntax.spec_dm4f);
                              FStar_Syntax_Syntax.interp =
                                (uu___375_30108.FStar_Syntax_Syntax.interp);
+                             FStar_Syntax_Syntax.mrelation =
+                               (uu___375_30108.FStar_Syntax_Syntax.mrelation);
                              FStar_Syntax_Syntax.actions = uu____30125;
                              FStar_Syntax_Syntax.eff_attrs =
                                (uu___375_30108.FStar_Syntax_Syntax.eff_attrs)
