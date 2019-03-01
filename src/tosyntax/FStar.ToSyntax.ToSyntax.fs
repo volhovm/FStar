@@ -489,6 +489,8 @@ let is_special_effect_combinator = function
   | "return_elab"
   | "bind_wp"
   | "bind_elab"
+  | "interp"
+  | "mrelation"
   | "repr"
   | "post"
   | "pre"
