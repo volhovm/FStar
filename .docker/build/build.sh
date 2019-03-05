@@ -187,7 +187,12 @@ function refresh_hints() {
     # outputting the list of files to stdout
     eval "$extra"
 
-    git commit --allow-empty -m "[CI] $msg"
+    commit=$(git commit -m "[CI] $msg")
+    if [[ $commit == *"nothing to commit, working tree clean"* ]]; then
+        echo "[Hints] Nothing to commit"
+        return 0
+    fi
+
     # Memorize that commit
     commit=$(git rev-parse HEAD)
     # Drop any other files that were modified as part of the build (e.g.
