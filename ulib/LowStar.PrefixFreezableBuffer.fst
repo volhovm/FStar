@@ -30,8 +30,6 @@ module Seq = FStar.Seq
 module HS = FStar.HyperStack
 module ST = FStar.HyperStack.ST
 
-friend FStar.Endianness
-
 module E = FStar.Endianness
 module LE = LowStar.Endianness
 
@@ -43,19 +41,6 @@ module LE = LowStar.Endianness
 #set-options "--max_fuel 0 --max_ifuel 0"
 
 let le_to_n s = E.le_to_n s
-
-
-#push-options "--max_fuel 1 --initial_fuel 1"  //to unroll E.le_to_n
-let rec le_to_n_zeros (s:Seq.seq u8)
-  : Lemma
-    (requires
-      forall (i:nat). i < Seq.length s ==> Seq.index s i == 0uy)
-    (ensures
-      le_to_n s == 0)
-    (decreases (Seq.length s))
-  = if Seq.length s = 0 then ()
-    else le_to_n_zeros (Seq.tail s)
-#pop-options
 
 let prefix_freezable_preorder = pre
 
@@ -82,7 +67,7 @@ let gcmalloc r len =
   
   let b = mgcmalloc #_ #prefix_freezable_preorder r 0uy (U32.add len 4ul) in
 
-  let h = ST.get () in le_to_n_zeros (Seq.slice (as_seq h b) 0 4);
+  let h = ST.get () in E.le_to_n_zeros (Seq.slice (as_seq h b) 0 4);
 
   assert (fresh_loc (loc_buffer b) h0 h);  //TODO: necessary for firing modifies_remove_new_locs lemma?
   update_frozen_until_alloc b;
@@ -93,7 +78,7 @@ let malloc r len =
   
   let b = mmalloc #_ #prefix_freezable_preorder r 0uy (U32.add len 4ul) in
 
-  let h = ST.get () in le_to_n_zeros (Seq.slice (as_seq h b) 0 4);
+  let h = ST.get () in E.le_to_n_zeros (Seq.slice (as_seq h b) 0 4);
 
   assert (fresh_loc (loc_buffer b) h0 h);  //TODO: necessary for firing modifies_remove_new_locs lemma?
   update_frozen_until_alloc b;
@@ -104,7 +89,7 @@ let alloca len =
   
   let b = malloca #_ #prefix_freezable_preorder 0uy (U32.add len 4ul) in
 
-  let h = ST.get () in le_to_n_zeros (Seq.slice (as_seq h b) 0 4);
+  let h = ST.get () in E.le_to_n_zeros (Seq.slice (as_seq h b) 0 4);
 
   assert (fresh_loc (loc_buffer b) h0 h);  //TODO: necessary for firing modifies_remove_new_locs lemma?
   update_frozen_until_alloc b;
