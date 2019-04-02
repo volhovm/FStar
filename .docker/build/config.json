@@ -23,6 +23,9 @@
     "NotificationChannel" : "#fstar-build",
     "PublicBranches" : [ "master" ],
 
+    "CompressBuildFolder": true,
+    "FolderToCompress" : "FStar"
+
     "RepoVersions" : {
         "hacl_version" : "origin/fstar-master",
         "kremlin_version" : "origin/master",
