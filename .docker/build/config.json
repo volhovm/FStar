@@ -24,7 +24,7 @@
     "PublicBranches" : [ "master" ],
 
     "CompressBuildFolder": true,
-    "FolderToCompress" : "FStar"
+    "FolderToCompress" : "FStar",
 
     "RepoVersions" : {
         "hacl_version" : "origin/fstar-master",
