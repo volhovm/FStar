@@ -80,11 +80,11 @@ let mac k t =
 let verify k text tag =
   (* to verify, we simply recompute & compare *)
   let m= hmac_sha1 k text in
-  let verified = (Platform.Bytes.equalBytes m tag) in
+  let verified = (FStar.Bytes.equal m tag) in
   let found =
     Some?
       (List.Tot.find
-        (fun (Entry k' text' tag') -> Platform.Bytes.equalBytes k k' && Platform.Bytes.equalBytes text text')
+        (fun (Entry k' text' tag') -> FStar.Bytes.equal k k' && FStar.Bytes.equal text text')
         !log) in
 
   (* plain, concrete implementation (ignoring the log) *)

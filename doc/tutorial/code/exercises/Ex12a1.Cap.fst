@@ -19,7 +19,7 @@ module Ex12a1.Cap (* capabilities *)
 
 open FStar.ST
 open FStar.All
-open Platform.Bytes
+open FStar.Bytes
 
 
 module ACLs = Ex12a.ACLs
