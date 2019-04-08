@@ -34,13 +34,31 @@ assume UTF8_inj:
 // END: UTF8Inj
 
 type capRead (msg:bytes) = (forall f. msg = utf8 f ==> ACLs.canRead f)
+type capWrite (msg:bytes) = (forall f. msg = utf8 f ==> ACLs.canWrite f)
 
 let k = MAC.keygen capRead
 
 // BEGIN: CapType
-val issue: f:string{ ACLs.canRead f } -> ML MAC.tag
-val redeem: f:string -> m:MAC.tag -> ML (u:unit{ ACLs.canRead f })
+val issueR: f:string{ ACLs.canRead f } -> ML MAC.tag
+let issueR f = assert(MAC.key_prop k (utf8 f)); MAC.mac k (utf8 f)
+
+val redeemR: f:string -> m:MAC.tag -> ML (u:unit{ ACLs.canRead f })
+let redeemR f m = match MAC.verify k (utf8 f) m with
+  | true -> ()
+  | false -> failwith "bad capability"
 // END: CapType
 
-let issue f = failwith "Implement this function"
-let redeem f t = failwith "Implement this function"
+val k': MAC.pkey capWrite
+let k' = MAC.keygen capWrite
+
+val issueW: f:string{ ACLs.canWrite f } -> ML MAC.tag
+let issueW f = assert(MAC.key_prop k' (utf8 f)); MAC.mac k' (utf8 f)
+
+val redeemW: f:string -> m:MAC.tag -> ML (u:unit{ ACLs.canWrite f })
+let redeemW f m = match MAC.verify k' (utf8 f) m with
+  | true -> assert(ACLs.canWrite f)
+  | false -> failwith "bad capability"
+
+let test =
+  let t1 = issueR "file1" in
+  redeemR "file1" t1
