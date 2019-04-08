@@ -46,10 +46,10 @@ let lemma_eq_intro #a s1 s2 = ()
 type uInt16 (i:int) = (0 <= i /\ i < 65536)
 type uint16 = i:int{uInt16 i}
 
-(*val utf8:
+val utf8:
   s:string  -> Tot (m:message{length m <= strlen s})
   (* this spec is accurate for ASCII strings *)
-let utf8 s = magic()*)
+let utf8 s = magic()
 
 (*val iutf8: m:message -> s:string{utf8 s == m}
 let iutf8 m = Platform.Bytes.iutf8 m*)
@@ -70,16 +70,15 @@ type string16 = s:string{uInt16 (length (utf8 s))} (* up to 65K *)
 (* =============== the formatting we use for authenticated RPCs *)
 
 
-val request : string -> Tot message
-val response: string16 -> string -> Tot message
-
-(* -------- implementation *)
-
 let tag0 = createBytes 1 0uy
-let tag1 = createBytes 1 1uy
 
+val tag1: b:lbytes 1{b <> tag0}
+let tag1 = let x = createBytes 1 1uy in createBytesDiff 1 0uy 1uy; x
+
+val request : string -> Tot (m:message{exists z. m = tag0 @| z})
 let request s = tag0 @| (utf8 s)
 
+val response: string16 -> string -> Tot (m:message{exists z. m = tag1 @| z})
 let response s t =
   lemma_repr_bytes_values (length (utf8 s));
   let lb = uint16_to_bytes (length (utf8 s)) in
@@ -100,14 +99,22 @@ let response s t =
 val req_resp_distinct:
   s:string -> s':string16 -> t':string ->
   Lemma (requires True)
-        (ensures  True) //replace with actual lemma post-condition
+        (ensures  (request s <> response s' t'))
         [SMTPat (request s); SMTPat (response s' t')]
+let req_resp_distinct s s' t' =
+  assert (exists z. request s = tag0 @| z);
+  assert (exists z. response s' t' = tag1 @| z);
+  assert (tag0 <> tag1)
 
 val req_injective:
   s0:string -> s1:string ->
-  Lemma (requires True) //replace with actual lemma pre-condition
-        (ensures  True) //replace with actual lemma post-condition
-        (*[SMTPat (request s0); SMTPat (request s1)]*)
+  Lemma (requires (s0 <> s1))
+        (ensures  (request s0 <> request s1))
+        [SMTPat (request s0); SMTPat (request s1)]
+let req_injective s0 s1 =
+  assert (exists z. request s0 = tag0 @| z);
+  assert (exists z. request s1 = tag0 @| z);
+  assert (exists z0 z1. z0 <> z1 /\ request s0 = tag0 @| z0 /\ request s1 = tag0 @| z1)
 
 val resp_injective:
   s0:string16 -> t0:string -> s1:string16 -> t1:string ->
@@ -115,4 +122,3 @@ val resp_injective:
         (ensures  True) //replace with actual lemma post-condition
         [SMTPat (response s0 t0); SMTPat (response s1 t1)]
 // END: FormatLemmasEx
-

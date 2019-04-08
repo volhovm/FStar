@@ -59,6 +59,7 @@ let redeemW f m = match MAC.verify k' (utf8 f) m with
   | true -> assert(ACLs.canWrite f)
   | false -> failwith "bad capability"
 
+
 let test =
   let t1 = issueR "file1" in
   redeemR "file1" t1

@@ -111,6 +111,11 @@ let index b i = Seq.index b i
 val createBytes : l:nat -> FStar.UInt8.t -> Tot (lbytes l)
 let createBytes l b = Seq.create l b
 
+assume val createBytesDiff: l:nat -> t1:FStar.UInt8.t -> t2:FStar.UInt8.t -> Lemma
+  (ensures (t1 = t2 <==> createBytes l t1 = createBytes l t2))
+  [SMTPat (createBytes l t1 = createBytes l t2)]
+
+
 // TODO: not implemented in ML
 val initBytes: l:nat -> (i:nat {i<l} -> Tot byte) -> Tot (lbytes l)
 let initBytes l f = Seq.init l f
