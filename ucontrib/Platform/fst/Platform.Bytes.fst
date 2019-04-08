@@ -36,10 +36,10 @@ let repr_bytes n =
 *)
 (* NS:
    The two assumes below were previously defined as axioms.
-	 They are evil! They pollute the global environment and
-	 slow down verification enormously.
-	 I've made them assumed lemmas; if you want to
-	 make use of these axioms, call the lemmas as needed in the context.
+     They are evil! They pollute the global environment and
+     slow down verification enormously.
+     I've made them assumed lemmas; if you want to
+     make use of these axioms, call the lemmas as needed in the context.
 *)
 assume val lemma_repr_bytes_values: n:nat ->
   Lemma (   ( n < 256 <==> repr_bytes n = 1 )
@@ -75,7 +75,7 @@ type lbytes (l:nat) = b:bytes{length b = l}
 
 (*@ val empty_bytes : (b:bytes){B (b) = C_array_of_list C_op_Nil ()} @*)
 val empty_bytes : lbytes 0
-let empty_bytes = Seq.create 0 0uy
+let empty_bytes = Seq.empty
 
 (*@ assume val abytes : (b:cbytes -> (a:bytes){B (a) = b}) @*)
 assume val abytes : (cbytes -> Tot bytes)
@@ -152,7 +152,7 @@ let append_empty_bytes_l (l: bytes): Lemma (ensures (empty_bytes @| l == l)) =
 
 let append_empty_bytes_r (l: bytes): Lemma (ensures (l @| empty_bytes == l)) =
   Seq.append_empty_r l
-  
+
 let append_assoc (l1 l2 l3: bytes): Lemma
   (ensures ((l1 @| l2) @| l3 == l1 @| (l2 @| l3))) =
   Seq.append_assoc l1 l2 l3
