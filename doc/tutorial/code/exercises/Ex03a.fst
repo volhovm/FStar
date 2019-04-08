@@ -22,8 +22,25 @@ open FStar.Mul
    Try writing them and see if F* agrees with you. *)
 
 // BEGIN: FactorialTypes
-val factorial: x:int{x>=0} -> Tot int
-let rec factorial n = 
-  if n = 0 then 1 else n * (factorial (n - 1))
+val factorial: x:nat -> nat
+let rec factorial n =
+  match n with
+    | 0 -> 1
+    | _ -> n * (factorial (n - 1))
 // END: FactorialTypes
 
+
+// BEGIN: FactorialTypes
+val factorial2: x:int{x>=5} -> Tot int
+let rec factorial2 n =
+  if n = 5 then factorial 5 else n * (factorial2 (n - 1))
+// END: FactorialTypes
+
+
+val factorial_is_greater_than_arg3: x:nat{x > 2} -> GTot (u:unit{factorial x > x})
+let rec factorial_is_greater_than_arg3 x =
+  match x with
+    | 3 -> ()
+    | _ -> factorial_is_greater_than_arg3 (x-1)
+
+val factorial_is_greater_than_arg4: x:nat{x > 0} -> Lemma (factorial x > x)

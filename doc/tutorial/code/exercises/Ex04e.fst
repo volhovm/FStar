@@ -16,18 +16,42 @@
 module Ex04e
 //find
 
-type option 'a =  
+open FStar.Exn
+open FStar.All
+
+type option 'a =
    | None : option 'a
    | Some : v:'a -> option 'a
 
+val satisfies: ('a -> bool) -> option 'a -> bool
+let satisfies f x = match x with
+  | None -> true
+  | Some y -> f y
+
+val find: f:('a -> bool) -> list 'a -> res:(option 'a){satisfies f res }
 let rec find f l = match l with
   | [] -> None
   | hd::tl -> if f hd then Some hd else find f tl
 
-(*
-Prove that if `find` returns `Some x` then `f x = true`. 
-Is it better to do this intrinsically or extrinsically? Do it both ways.
-*)
+val isSome : option 'a -> bool
+let isSome x = match x with
+  | None -> false
+  | Some _ -> true
+
+exception FromSomeException
+val fromSome : option 'a -> ML 'a
+let fromSome x = match x with
+  | None -> raise FromSomeException
+  | Some x -> x
 
 
+val find_satisfies : #a:eqtype -> b:a -> f:(a -> bool) -> l:(list a) ->
+                     Lemma (requires (find f l = Some b))
+                           (ensures (f b))
+let find_satisfies #a b f l = ()
 
+val find_satisfies2 : #a:eqtype -> f:(a -> bool) -> l:(list a) ->
+                     Lemma (match find f l with
+                              | None -> true
+                              | Some x -> f x)
+let find_satisfies2 #a f l = ()

@@ -40,5 +40,24 @@ let rec append_assoc xs ys zs =
   | [] -> ()
   | x::xs' -> append_assoc xs' ys zs
 
-val rev_is_ok : l:list 'a -> Lemma (rev [] l == reverse l)
+val append_null : l:list 'a -> Lemma (append l [] == l)
+let rec append_null l = match l with
+  | [] -> ()
+  | x :: xs -> append_null xs
 
+val rev_is_ok0 : l1:list 'a -> l2:list 'a -> Lemma (ensures (rev l1 l2 == append (reverse l2) l1)) (decreases l2)
+let rec rev_is_ok0 l1 l2 = match l2 with
+  | [] -> ()
+  | x :: xs -> rev_is_ok0 (x::l1) xs; append_assoc (reverse xs) [x] l1
+
+// rev l1 (x::xs)
+// rev (x::l1) xs
+// append (reverse xs) (x:l1)
+// append (reverse xs + [x]) l1
+// append (reverse (x::xs) l1
+
+val rev_is_ok : l:list 'a -> Lemma (rev [] l == reverse l)
+let rev_is_ok l = rev_is_ok0 [] l; append_null (reverse l)
+
+// rev [] (x :: xs)
+// rev (x::[]) xs

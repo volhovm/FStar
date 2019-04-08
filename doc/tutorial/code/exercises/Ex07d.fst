@@ -106,11 +106,11 @@ let rec typing g e =
 val progress : e:exp -> Lemma
       (requires (Some? (typing empty e)))
       (ensures (is_value e \/ (Some? (step e))))
-let rec progress e = 
+let rec progress e =
   match e with
   | EVar y -> ()
-  | EApp e1 e2 -> 
-    (match typing empty e1 with 
+  | EApp e1 e2 ->
+    (match typing empty e1 with
     | Some _ -> progress e1; progress e2
     | None -> ())
   | EAbs y _ e1 ->
@@ -121,7 +121,8 @@ let rec progress e =
       progress e1; progress e2; progress e3
   | ETrue
   | EFalse -> ()
-  
+
+
 val appears_free_in : x:int -> e:exp -> Tot bool
 let rec appears_free_in x e =
   match e with
@@ -239,3 +240,5 @@ let typed_step e = progress e; preservation e; Some?.v (step e)
 (* Exercise: implement this function *)
 val eval : e:exp{Some? (typing empty e)} ->
            Dv (v:exp{is_value v && typing empty v = typing empty e})
+let rec eval e =
+  if is_value e then e else eval (typed_step e)

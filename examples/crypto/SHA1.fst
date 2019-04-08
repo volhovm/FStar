@@ -32,7 +32,7 @@ type key = lbytes keysize
 type tag = bytes //lbytes macsize
 
 val sample: n:nat -> St (lbytes n)
-let sample n = random n 
+let sample n = random n
 
 val sha1 : bytes -> Tot (h:bytes{length h = 20})
 let sha1 b = hash SHA1 b
@@ -46,5 +46,5 @@ let hmac_sha1 k t =
   let xor_key_opad = xor keysize k opad in
   let xor_key_ipad = xor keysize k ipad in
   sha1 ( xor_key_opad @|
-                (sha1 (xor_key_ipad @| t))
-       )
+         (sha1 (xor_key_ipad @| t)
+       ))

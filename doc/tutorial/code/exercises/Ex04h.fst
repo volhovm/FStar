@@ -18,3 +18,13 @@ module Ex04h
 
 (* Write a function that returns the `n`th element of a list. Give a
    type that ensures it is total. *)
+
+val len: list 'a -> nat
+let rec len l = match l with
+  | [] -> 0
+  | x::xs -> 1 + len xs
+
+val list_at : l:list 'a -> x:nat{x < len l} -> Tot 'a
+let rec list_at l i = match (l,i) with
+  | (x::_, 0) -> x
+  | (_::xs,_) -> list_at xs (i-1)

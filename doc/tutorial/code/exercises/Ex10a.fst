@@ -47,18 +47,16 @@ let acls = ST.alloc []
    F* infers a fully precise predicate transformer semantics for them.
 *)
 
-(* 
 // Uncomment these types and make them precise enough to pass the test
 // BEGIN: Ex10aExercise
-val grant : e:entry -> ST unit (requires (fun h -> True))
-                               (ensures (fun h x h' -> True))
-val revoke: e:entry -> ST unit (requires (fun h -> True))
-                               (ensures (fun h x h' -> True))
-// END: Ex10aExercise
-*)
-
+val grant : e:entry ->
+            ST unit (requires (fun h -> True))
+                    (ensures (fun h x h' -> sel h' acls = e::(sel h acls)))
 let grant e = acls := e::!acls
 
+
+val revoke:e:entry -> ST unit (requires (fun h -> True))
+                               (ensures (fun h x h' -> not (mem e (sel h' acls))))
 let revoke e =
   let db = filter (fun e' -> e<>e') !acls in
   acls := db
@@ -72,7 +70,7 @@ type canWrite_t f h = canWrite (sel h acls) f == true
 (* In order to call `read`, you need to prove
    the `canRead f` permission exists in the input heap *)
 assume val read:   file:string -> ST string
-                                     (requires (canRead_t file))
+                                     (requires canRead_t file))
                                      (ensures (fun h s h' -> modifies_none h h'))
 
 (* Likewise for `delete` *)
@@ -90,9 +88,9 @@ assume val delete: file:string -> ST unit
    Regardless, the specification proves that `safe_Delete`
    does not change the heap.
  *)
-val safe_delete: file -> All unit 
-			    (requires (fun h -> True))
-			    (ensures (fun h x h' -> modifies_none h h'))
+val safe_delete: file -> All unit
+                (requires (fun h -> True))
+                (ensures (fun h x h' -> modifies_none h h'))
 
 
 let safe_delete file =
@@ -105,9 +103,8 @@ val test_acls: file -> ML unit
 let test_acls f =
   grant (Readable f);     (* ok *)
   let _ = read f in       (* ok --- it's in the acl *)
-  //delete f;               (* not ok --- we're only allowed to read it *) 
+  //delete f;               (* not ok --- we're only allowed to read it *)
   safe_delete f;          (* ok, but fails dynamically *)
   revoke (Readable f);
-  //let _ = read f in       (* not ok any more *) 
+  //let _ = read f in       (* not ok any more *)
   ()
-

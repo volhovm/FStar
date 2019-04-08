@@ -30,7 +30,10 @@ let rec mem #a x xs =
 // END: Mem
 
 // BEGIN: AppendMem
-val append_mem:  #a:eqtype -> l1:list a -> l2:list a -> x:a
+val append_mem: #a:eqtype -> l1:list a -> l2:list a -> x:a
         -> Lemma (mem x (append l1 l2) <==> mem x l1 || mem x l2)
 // END: AppendMem
-let rec append_mem #a l1 l2 x = admit() //replace admit() by proof
+let rec append_mem #a l1 l2 v =
+  match l1 with
+  | [] -> ()
+  | x :: xs -> append_mem #a xs l2 v

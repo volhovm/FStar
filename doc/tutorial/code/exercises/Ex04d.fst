@@ -31,7 +31,7 @@ let snoc l h = append l [h]
 val snoc_cons: l:list 'a -> h:'a -> Lemma (reverse (snoc l h) == h::reverse l)
 let rec snoc_cons l h = match l with
   | [] -> ()
-  | hd::tl -> snoc_cons tl h 
+  | hd::tl -> snoc_cons tl h
 
 
 val rev_involutive: l:list 'a -> Lemma (reverse (reverse l) == l)
@@ -39,8 +39,31 @@ let rec rev_involutive l = match l with
   | [] -> ()
   | hd::tl -> rev_involutive tl; snoc_cons (reverse tl) hd
 
+
+//val last: l: list 'a -> 'a
+//last
+//
+//val hlp: l1:list 'a -> l2:list 'a
+//                -> Lemma (requires (reverse l1 == reverse l2 /\ ))
+//                         (ensures (last l1 == last l2))
+//let rec hlp l h = match l with
+//  | [] -> ()
+//  | hd::tl -> snoc_cons tl h
+
+
 // BEGIN: RevInjective
 val rev_injective : l1:list 'a -> l2:list 'a
                 -> Lemma (requires (reverse l1 == reverse l2))
                          (ensures  (l1 == l2))
+let rec rev_injective l1 l2 = match (l1,l2) with
+  | ([],[]) -> ()
+  | (x :: xs, y :: ys) ->
+    snoc_cons (reverse xs) x;
+    snoc_cons (reverse ys) y;
+    rev_involutive xs;
+    rev_involutive ys;
+    rev_injective xs ys
+
 // END: RevInjective
+
+// l1 = x :: xs = x :: rev (rev xs) = x :: rev (rev ys) = {???} = y :: rev (rev ys) = y :: ys = l2

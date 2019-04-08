@@ -14,10 +14,14 @@
    limitations under the License.
 *)
 module Ex12.SHA1
+
 open FStar.All
 open FStar.Seq
-open Platform.Bytes
+open FStar.Bytes
 open CoreCrypto
+
+module U8 =  FStar.UInt8
+module U32 =  FStar.UInt32
 
 type text  = bytes    (* a type abbreviation, for clarity *)
 
@@ -32,19 +36,19 @@ type key = lbytes keysize
 type tag = bytes //lbytes macsize
 
 val sample: n:nat -> ML (lbytes n)
-let sample n = random n 
+let sample n = random n
 
 val sha1 : bytes -> Tot (h:bytes{length h = 20})
 let sha1 b = hash SHA1 b
 
-val hmac_sha1: key -> text -> Tot tag
+val hmac_sha1: key -> t:text{length t < keysize} -> Tot tag
 let hmac_sha1 k t =
-  let x5c = byte_of_int 92 in
-  let x36 = byte_of_int 54 in
-  let opad = createBytes blocksize x5c in
-  let ipad = createBytes blocksize x36 in
-  let xor_key_opad = xor keysize k opad in
-  let xor_key_ipad = xor keysize k ipad in
+  let x5c = U8.uint_to_t 92 in
+  let x36= U8.uint_to_t 54 in
+  let opad = create (U32.uint_to_t blocksize) x5c in
+  let ipad = create (U32.uint_to_t blocksize) x36 in
+  let (xor_key_opad: lbytes keysize) = xor (U32.uint_to_t keysize) k opad in
+  let (xor_key_ipad: lbytes keysize) = xor (U32.uint_to_t keysize) k ipad in
   sha1 ( xor_key_opad @|
                 (sha1 (xor_key_ipad @| t))
        )

@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Ex12a.ACLs 
+module Ex12a.ACLs
 
 open FStar.Exn
 open FStar.All
@@ -22,13 +22,13 @@ open FStar.All
 type filename = string
 
 (* canWrite is a function specifying whether or not a file f can be written *)
-let canWrite (f:filename) = 
-  match f with 
+let canWrite (f:filename) =
+  match f with
     | "demo/tempfile" -> true
     | _ -> false
 
 (* canRead is also a function ... *)
-let canRead (f:filename) = 
+let canRead (f:filename) =
   canWrite f               (* writeable files are also readable *)
   || f="demo/README"       (* and so is this file *)
 // END: ACLs

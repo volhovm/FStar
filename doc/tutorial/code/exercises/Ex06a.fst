@@ -16,5 +16,30 @@
 module Ex06a
 //partition
 
+
+
+val append : list 'a -> list 'a -> Tot (list 'a)
+let rec append l1 l2 = match l1 with
+  | [] -> l2
+  | hd :: tl -> hd :: append tl l2
+
+val length: list 'a -> Tot nat
+let rec length = function
+  | [] -> 0
+  | _::tl -> 1 + length tl
+
+
 (* Exercise: Write the partition function and prove it total.  *)
-val partition: ('a -> Tot bool) -> list 'a -> Tot (list 'a * list 'a)
+val partition: ('a -> Tot bool) -> l:(list 'a) ->
+         (Tot (res:(list 'a * list 'a){length (fst res) <= length l && length (snd res) <= length l}))
+let rec partition f l = match l with
+  | [] -> ([],[])
+  | x::xs -> let (l1,l2) = partition f xs in if f x then (x::l1,l2) else (l,x::l2)
+
+
+val sort : l:(list int) -> Tot (list int) (decreases (length l))
+let rec sort l = match l with
+  | [] -> []
+  | pivot :: tl ->
+    let hi, lo  = partition (fun x -> pivot <= x) tl in
+    append (sort lo) (pivot :: sort hi)

@@ -24,6 +24,7 @@ let rec length l = match l with
 
 (* Give append a type that proves it always returns a list whose
    length is the sum of the lengths of its arguments. *)
+val append: list 'a -> list 'a -> list 'a
 let rec append l1 l2 = match l1 with
   | [] -> l2
   | hd :: tl -> hd :: append tl l2

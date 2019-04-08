@@ -28,9 +28,9 @@ type exp =
   | ETrue  : exp
   | EFalse : exp
   | EIf    : exp -> exp -> exp -> exp
-//  | EPair  : exp -> exp -> exp
-//  | EFst   : exp -> exp
-//  | ESnd   : exp -> exp
+  | EPair  : exp -> exp -> exp
+  | EFst   : exp -> exp
+  | ESnd   : exp -> exp
 
 val is_value : exp -> Tot bool
 let rec is_value e =
@@ -38,7 +38,7 @@ let rec is_value e =
   | EAbs _ _ _
   | ETrue
   | EFalse      -> true
-//  | EPair e1 e2 -> is_value e1 && is_value e2
+  | EPair e1 e2 -> is_value e1 && is_value e2
   | _           -> false
 
 val subst : int -> exp -> exp -> Tot exp
@@ -51,9 +51,9 @@ let rec subst x e e' =
   | ETrue -> ETrue
   | EFalse -> EFalse
   | EIf e1 e2 e3 -> EIf (subst x e e1) (subst x e e2) (subst x e e3)
-(*  | EPair e1 e2 -> EPair (subst x e e1) (subst x e e2)
+  | EPair e1 e2 -> EPair (subst x e e1) (subst x e e2)
   | EFst e1 -> EFst (subst x e e1)
-  | ESnd e1 -> ESnd (subst x e e1) *) //use this code
+  | ESnd e1 -> ESnd (subst x e e1)
 
 val step : exp -> Tot (option exp)
 let rec step e =
@@ -82,7 +82,7 @@ let rec step e =
         (match (step e1) with
         | Some e1' -> Some (EIf e1' e2 e3)
         | None     -> None)
- (* | EPair e1 e2 ->
+  | EPair e1 e2 ->
       if is_value e1 then
         if is_value e2 then None
         else
@@ -110,7 +110,7 @@ let rec step e =
       else
         (match (step e1) with
         | Some e1' -> Some (ESnd e1')
-        | None     -> None) *) //use this code
+        | None     -> None)
   | _ -> None
 
 type env = int -> Tot (option ty)
@@ -139,6 +139,11 @@ let rec typing g e =
       (match typing g e1, typing g e2, typing g e3 with
       | Some TBool, Some t2, Some t3 -> if t2 = t3 then Some t2 else None
       | _         , _      , _       -> None)
+  | EPair e1 e2 -> (match (typing g e1, typing g e2) with
+      | (Some t1,Some t2) -> Some (TPair t1 t2)
+      | _ -> None)
+  | EFst e1 -> (match typing g e1 with | Some (TPair t1 _) -> Some t1 | _ -> None)
+  | ESnd e1 -> (match typing g e1 with | Some (TPair _ t2) -> Some t2 | _ -> None)
 
 val progress : e:exp -> Lemma
       (requires (Some? (typing empty e)))
@@ -146,8 +151,8 @@ val progress : e:exp -> Lemma
 let rec progress e =
   match e with
   | EVar y -> ()
-  | EApp e1 e2 -> 
-    (match typing empty e1 with 
+  | EApp e1 e2 ->
+    (match typing empty e1 with
     | Some _ -> progress e1; progress e2
     | None -> ())
   | EAbs y _ e1 ->
@@ -156,6 +161,15 @@ let rec progress e =
     | None -> ())
   | EIf e1 e2 e3 ->
       progress e1; progress e2; progress e3
+  | EPair e1 e2 -> progress e1; progress e2
+  | EFst e1 ->
+    (match typing empty e1 with
+    | Some _ -> progress e1
+    | None -> ())
+  | ESnd e1 ->
+    (match typing empty e1 with
+    | Some _ -> progress e1
+    | None -> ())
   | ETrue
   | EFalse -> ()
 
@@ -168,6 +182,9 @@ let rec appears_free_in x e =
   | EAbs y _ e1 -> x <> y && appears_free_in x e1
   | EIf e1 e2 e3 ->
       appears_free_in x e1 || appears_free_in x e2 || appears_free_in x e3
+  | EPair e1 e2 -> appears_free_in x e1 || appears_free_in x e2
+  | EFst e1 -> appears_free_in x e1
+  | ESnd e1 -> appears_free_in x e1
   | ETrue
   | EFalse -> false
 
@@ -183,6 +200,9 @@ let rec free_in_context x e g =
   | EApp e1 e2 -> free_in_context x e1 g; free_in_context x e2 g
   | EIf e1 e2 e3 -> free_in_context x e1 g;
                     free_in_context x e2 g; free_in_context x e3 g
+  | EPair e1 e2 -> free_in_context x e1 g; free_in_context x e2 g
+  | EFst e1 -> free_in_context x e1 g
+  | ESnd e1 -> free_in_context x e1 g
 
 val typable_empty_closed : x:int -> e:exp -> Lemma
       (requires (Some? (typing empty e)))
@@ -210,6 +230,16 @@ let rec context_invariance e g g' =
      context_invariance e1 g g';
      context_invariance e2 g g';
      context_invariance e3 g g'
+
+  | EPair e1 e2 ->
+     context_invariance e1 g g';
+     context_invariance e2 g g'
+
+  | EFst e1 ->
+     context_invariance e1 g g'
+
+  | ESnd e1 ->
+     context_invariance e1 g g'
 
   | _ -> ()
 
@@ -244,6 +274,13 @@ let rec substitution_preserves_typing x e v g =
      substitution_preserves_typing x e2 v g;
      substitution_preserves_typing x e3 v g
 
+  | EPair e1 e2 ->
+     substitution_preserves_typing x e1 v g;
+     substitution_preserves_typing x e2 v g
+
+  | EFst e1 -> substitution_preserves_typing x e1 v g
+  | ESnd e1 -> substitution_preserves_typing x e1 v g
+
   | EAbs y t_y e1 ->
      let gxy = extend gx y t_y in
      let gy = extend g y t_y in
@@ -254,8 +291,8 @@ let rec substitution_preserves_typing x e v g =
         typing_extensional gxy gyx e1;
         substitution_preserves_typing x e1 v gy)
 
-val preservation : e:exp{Some? (typing empty e) /\ Some? (step e)} ->
-      Tot (u:unit{typing empty (Some?.v (step e)) == typing empty e})
+val preservation : e:exp{Some? (typing empty e) /\ Some? (step e)} -> Lemma
+      (typing empty (Some?.v (step e)) == typing empty e)
 let rec preservation e =
   match e with
   | EApp e1 e2 ->
@@ -269,3 +306,12 @@ let rec preservation e =
   | EIf e1 _ _ ->
       if is_value e1 then ()
       else preservation e1
+
+  | EPair e1 e2 ->
+      if is_value e1 then
+        (if is_value e2 then ()
+         else preservation e2)
+      else preservation e1
+
+  | EFst e1 -> if is_value e1 then () else preservation e1
+  | ESnd e1 -> if is_value e1 then () else preservation e1

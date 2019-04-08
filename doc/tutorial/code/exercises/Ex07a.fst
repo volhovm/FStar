@@ -109,11 +109,11 @@ val progress : e:exp -> Lemma
 let rec progress e =
   match e with
   | EVar y -> ()
-  | EApp e1 e2 -> 
-    (match typing empty e1 with 
+  | EApp e1 e2 ->
+    (match typing empty e1 with
     | Some _ -> progress e1; progress e2
     | None -> ())
-  | EAbs y _ e1 -> 
+  | EAbs y _ e1 ->
     (match typing empty e1 with
     | Some _ -> progress e1
     | None -> ())
@@ -242,3 +242,4 @@ let rec preservation e =
 (* Exercise: implement this function *)
 val typed_step : e:exp{Some? (typing empty e) /\ not(is_value e)} ->
                  Tot (e':exp{typing empty e' = typing empty e})
+let rec typed_step e = progress e; preservation e; let Some x = step e in x

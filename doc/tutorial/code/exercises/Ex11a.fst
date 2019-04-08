@@ -20,6 +20,9 @@ open FStar.Set
 open FStar.HyperStack
 open FStar.HyperStack.ST
 
+module HS = FStar.HyperStack
+module HST = FStar.HyperStack.ST
+
 let only (#t:eqtype) (i:t) =
   singleton i
 
@@ -105,7 +108,7 @@ let new_arm r0 =
 val new_robot: r0:rid{is_eternal_region r0} -> ST bot
   (requires (fun h0 -> True))
   (ensures (fun h0 x h1 ->
-	      modifies empty h0 h1
+          modifies empty h0 h1
             /\ extends (Bot?.r x) r0
             /\ fresh_region (Bot?.r x) h0 h1
             /\ robot_inv x h1))
@@ -179,6 +182,8 @@ val fly_one: b0:bot -> b1:bot{disjoint (Bot?.r b0) (Bot?.r b1)} -> ST unit
 let fly_one b0 b1 =
   fly b0
 
+(*** Several bots ***)
+
 noeq type bots : set rid -> Type =
   | Nil : bots empty
   | Cons : #rs:set rid
@@ -191,11 +196,11 @@ let rec mem  (#rs:set rid) b = function
   | Nil -> false
   | Cons hd tl -> b == hd \/ mem b tl
 
-val lemma_mem_rid: #rs:set rid -> bs:bots rs -> b:bot
-  -> Lemma (requires True)
-          (ensures  (mem #rs b bs ==> Set.mem (Bot?.r b) rs))
-	  (decreases bs)
-          [SMTPat (mem #rs b bs)]
+val lemma_mem_rid: #rs:set rid -> bs:bots rs -> b:bot -> Lemma
+  (requires True)
+  (ensures  (mem #rs b bs ==> Set.mem (Bot?.r b) rs))
+  (decreases bs)
+  [SMTPat (mem #rs b bs)]
 let rec lemma_mem_rid #rs bs b =
   match bs with
   | Nil -> ()
@@ -204,14 +209,29 @@ let rec lemma_mem_rid #rs bs b =
 val lemma_bots_tl_disjoint: #rs:set rid -> bs:bots rs{Cons? bs}
   -> Lemma (requires True)
           (ensures (forall b. let Cons hd tl = bs in
-			 mem b tl ==> disjoint (Bot?.r b) (Bot?.r hd)))
+             mem b tl ==> disjoint (Bot?.r b) (Bot?.r hd)))
 let lemma_bots_tl_disjoint #rs bs = ()
 
+
+val lemma_help: rs:set rid -> b:bot -> h0:HS.mem -> h1:HS.mem -> Lemma
+  (requires (modifies_transitively rs h0 h1 /\ distinct (Bot?.r b) rs /\ robot_inv b h0 /\ flying b h0))
+  (ensures (flying b h1 /\ robot_inv b h1))
+let lemma_help rs b h0 h1= ()
+
 //implement this function
-assume val fly_robot_army: #rs:set rid -> bs:bots rs -> ST unit
+val fly_robot_army: #rs:set rid -> bs:bots rs -> ST unit
   (requires (fun h -> (forall b. mem b bs ==> robot_inv b h)))
-  (ensures  (fun h0 _u h1 ->   modifies_transitively rs h0 h1 /\
-                            (forall b. mem b bs ==> robot_inv b h1 /\ flying b h1)))
+  (ensures  (fun h0 _u h1 -> modifies_transitively rs h0 h1 /\
+                             (forall b. mem b bs ==> robot_inv b h1 /\ flying b h1)))
+let rec fly_robot_army #rs bs = match bs with
+  | Nil -> ()
+  | Cons #rs' b bs' ->
+    fly b;
+    let h1 = HST.get () in
+    fly_robot_army #rs' bs';
+    let h2 = HST.get () in
+    lemma_help rs' b h1 h2
+
 
 val main: unit -> ST unit
     (requires (fun _ -> True))

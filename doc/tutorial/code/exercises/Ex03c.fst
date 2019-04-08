@@ -26,4 +26,9 @@ let rec fibonacci n =
 
 val fibonacci_greater_than_arg : n:nat{n >= 2} -> Lemma (fibonacci n >= n)
 // END: FibonacciGreaterThanArg
-let fibonacci_greater_than_arg n = admit() //replace the admit() by a valid proof.
+let rec fibonacci_greater_than_arg n = match n with
+  | 2 -> ()
+  | _ -> admit() // fibonacci_greater_than_arg (n-1)
+
+val test : int
+let test = admit()

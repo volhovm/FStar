@@ -14,22 +14,22 @@
    limitations under the License.
 *)
 module Ex01a
+//safe-read-write
 
 open FStar.Exn
 open FStar.All
-//safe-read-write
 
 // BEGIN: ACLs
 type filename = string
 
 (** [canWrite] is a function specifying whether a file [f] can be written *)
-let canWrite (f:filename) = 
-  match f with 
+let canWrite (f:filename) =
+  match f with
     | "demo/tempfile" -> true
     | _ -> false
 
 (** [canRead] is also a function ... *)
-let canRead (f:filename) = 
+let canRead (f:filename) =
   canWrite f               (* writeable files are also readable *)
   || f="demo/README"       (* and so is demo/README *)
 // END: ACLs
@@ -55,7 +55,7 @@ let staticChecking () =
   let v2 = read readme in
   (* let v3 = read passwd in // invalid read, fails type-checking *)
   write tmp "hello!"
-  (* ; write passwd "junk" // invalid write , fails type-checking *)
+  (* write passwd "junk" // invalid write , fails type-checking *)
 // END: StaticChecking
 
 // BEGIN: CheckedRead
@@ -66,12 +66,11 @@ let checkedRead f =
 // END: CheckedRead
 
 // BEGIN: CheckedWriteType
-assume val checkedWrite : filename -> string -> ML unit
+exception InvalidWrite
+val checkedWrite : filename -> string -> ML unit
+let checkedWrite f v =
+  if canWrite f then write f v else raise InvalidWrite
 // END: CheckedWriteType
-
-// solution here
-//
-//
 
 // BEGIN: DynamicChecking
 let dynamicChecking () =
